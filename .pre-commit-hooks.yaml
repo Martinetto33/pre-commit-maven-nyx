@@ -1,0 +1,14 @@
+# .pre-commit-hooks.yaml
+- id: maven-nyx-version-sync
+  name: Ensure Maven version matches Nyx and Liquibase files exist
+  description: |
+    Validates that:
+    - The version in pom.xml matches the version from Nyx (via JSON)
+    - Required Liquibase files (<version>.sql and <version>_rollback.sql) exist
+  entry: python check_version_sync.py
+  language: python
+  types: [file]  # doesn't actually process files, but needed for framework
+  pass_filenames: false
+  require_serial: true
+  always_run: true
+  stages: [commit]
