@@ -35,7 +35,7 @@ This section explains how to adopt this plugin into your project, once you have 
 
 ### Creating the JSON configuration file
 
-You will need to create a JSON configuration file with the following content:
+You will need to create a `.pre-commit-maven-nyx.json` configuration file with the following content:
 
 ```json
 
