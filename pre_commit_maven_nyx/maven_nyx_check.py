@@ -196,7 +196,7 @@ def main(argv: list[str] | None = None) -> int:
     # Skip if not on a protected branch
     if not is_protected_branch(config):
         logging.info(
-            f"Branch '{current_branch}' not in protected list {protected_branches} – skipping checks"
+            f"Branch '{current_branch}' not in protected list {protected_branches} - skipping checks"
         )
         return 0
 
@@ -226,7 +226,7 @@ def main(argv: list[str] | None = None) -> int:
         pom_version = get_pom_version(pom_file)
         if pom_version != nyx_version:
             logging.error(
-                f"Maven version ({pom_version}) ≠ Nyx version ({nyx_version}). "
+                f"Maven version ({pom_version}) != Nyx version ({nyx_version}). "
                 "Refusing to commit on protected branch unless versions match. "
                 "You can disable this check by setting check_maven=false in .pre-commit-maven-nyx.json. "
             )
