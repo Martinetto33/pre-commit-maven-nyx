@@ -95,6 +95,7 @@ def get_pom_version(pom_path: Path) -> str:
 
 
 def validate_liquibase_files(version: str, lb_dir: Path):
+    """Attempts to find Liquibase files for the given version. Breaks execution if not found."""
     forward = lb_dir / f"{version}.sql"
     rollback = lb_dir / f"{version}_rollback.sql"
 
@@ -107,6 +108,13 @@ def validate_liquibase_files(version: str, lb_dir: Path):
     if missing_files:
         for f in missing_files:
             logging.error(f"Missing Liquibase file: {f}")
+        else:
+            logging.error(f"""
+            Liquibase files missing for version {version} (checked directory: {lb_dir}).
+            Expected files: {forward} and {rollback}.
+            Refusing to commit on protected branch without Liquibase files.
+            You can disable this check by setting check_liquibase=false in .pre-commit-maven-nyx.json.
+            """)
         sys.exit(1)
 
 
