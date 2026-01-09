@@ -151,15 +151,21 @@ In your project, you will need to create a `.pre-commit-config.yaml` file with t
 
 ```yaml
 ---
-  - repos:
-      # - repo: ...
+default_install_hook_types:
+  - pre-push
+  - pre-commit
+  # other default stages...
 
-      # Martinetto33 pre-commit-maven-nyx
-      # (https://github.com/Martinetto33/pre-commit-maven-nyx)
-      - repo: https://github.com/Martinetto33/pre-commit-maven-nyx
-        rev: v1.1.0 # choose the latest version
-        hooks:
-          - id: maven-nyx-version-sync
+repos:
+  # - repo: ...
+
+  # Martinetto33 pre-commit-maven-nyx
+  # (https://github.com/Martinetto33/pre-commit-maven-nyx)
+  - repo: https://github.com/Martinetto33/pre-commit-maven-nyx
+    rev: v1.1.0 # choose the latest version
+    hooks:
+      - id: maven-nyx-version-sync
+        stages: [pre-commit, pre-push]
 ```
 
 ### Installing the dependency in your project
@@ -173,10 +179,12 @@ pre-commit install
 ```
 In case the above command fails, you might want to check the [troubleshooting](#Troubleshooting) section.
 
-To run everything, you'll use:
+To run everything in case you want to test without committing or pushing, you'll use:
 ```bash
 pre-commit run --all-files
 ```
+
+Otherwise, the hooks will run automatically when you commit or push, rendering you stress-free!
 
 ## <a name="Troubleshooting"></a> Troubleshooting
 
