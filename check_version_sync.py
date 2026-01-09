@@ -8,8 +8,24 @@ Pre-commit hook to validate:
 import json
 import os
 import sys
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as elementTree
+import logging
 from pathlib import Path
+
+
+def setup_logging():
+    # Use a simple format without timestamps (cleaner for pre-commit)
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(levelname)s: %(message)s",
+        stream=sys.stdout
+    )
+    # Prevent double logs if imported elsewhere
+    logging.getLogger().handlers.clear()
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
+    logging.getLogger().addHandler(handler)
+    logging.getLogger().setLevel(logging.INFO)
 
 
 def get_current_branch() -> str:
@@ -17,6 +33,25 @@ def get_current_branch() -> str:
         return os.popen("git rev-parse --abbrev-ref HEAD").read().strip()
     except Exception:
         return "unknown"
+
+
+def load_config(config_path: Path) -> dict:
+    """Load and validate configuration file."""
+    if not config_path.exists():
+        logging.warning(f"Config file not found: {config_path}")
+        logging.warning("""
+        Using default configuration; to avoid this, create a .pre-commit-maven-nyx.json file. 
+        More info at https://github.com/Martinetto33/pre-commit-maven-nyx?tab=readme-ov-file#usage.
+        """)
+        return {}
+    try:
+        return json.loads(config_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        logging.error(f"Failed to parse config file: {e}")
+        sys.exit(1)
+    except Exception as e:
+        logging.error(f"Failed to load config: {e}")
+        sys.exit(1)
 
 
 def is_protected_branch(config: dict) -> bool:
@@ -27,25 +62,25 @@ def is_protected_branch(config: dict) -> bool:
 
 def load_nyx_version(nyx_file: Path) -> str:
     if not nyx_file.exists():
-        print(f"::error::Nyx version file not found: {nyx_file}", file=sys.stderr)
+        logging.error(f"Nyx version file not found: {nyx_file}")
         sys.exit(1)
     try:
         data = json.loads(nyx_file.read_text())
         return data.get("version") or data.get("current_version")
     except Exception as e:
-        print(f"::error::Failed to parse Nyx JSON: {e}", file=sys.stderr)
+        logging.error(f"Failed to parse Nyx JSON: {e}")
         sys.exit(1)
 
 
 def get_pom_version(pom_path: Path) -> str:
     if not pom_path.exists():
-        print(f"::error::pom.xml not found: {pom_path}", file=sys.stderr)
+        logging.error(f"pom.xml not found: {pom_path}")
         sys.exit(1)
 
     # Handle Maven POM namespace
     namespaces = {'m': 'http://maven.apache.org/POM/4.0.0'}
     try:
-        tree = ET.parse(pom_path)
+        tree = elementTree.parse(pom_path)
         version_elem = tree.find(".//m:version", namespaces)
         if version_elem is not None:
             return version_elem.text.strip()
@@ -55,7 +90,7 @@ def get_pom_version(pom_path: Path) -> str:
             return parent_version.text.strip()
         raise ValueError("No <version> found in pom.xml or parent")
     except Exception as e:
-        print(f"::error::Failed to parse pom.xml: {e}", file=sys.stderr)
+        logging.error(f"Failed to parse pom.xml: {e}")
         sys.exit(1)
 
 
@@ -71,53 +106,76 @@ def validate_liquibase_files(version: str, lb_dir: Path):
 
     if missing_files:
         for f in missing_files:
-            print(f"::error::Missing Liquibase file: {f}", file=sys.stderr)
+            logging.error(f"Missing Liquibase file: {f}")
         sys.exit(1)
 
 
 def main():
-    # Load optional config file (from project root)
-    config_path = Path(".pre-commit-maven-nyx.json")
-    config = {}
-    if config_path.exists():
-        try:
-            config = json.loads(config_path.read_text())
-        except Exception as e:
-            print(f"::error::Invalid config JSON: {e}", file=sys.stderr)
-            sys.exit(1)
+    setup_logging()
 
-    # Skip if not on protected branch
+    # Load config file
+    config_path = Path(".pre-commit-maven-nyx.json")
+    config = load_config(config_path)
+
+    # Determine current branch
+    current_branch = get_current_branch()
+    logging.info(f"Current branch: {current_branch}")
+
+    # Get protected branches (default to master/main)
+    protected_branches = config.get("protected_branches", ["master", "main"])
+    if not isinstance(protected_branches, list):
+        logging.error(
+            f"Protected branches in file {config_path} must be a list of strings; got `{protected_branches}` instead.")
+        sys.exit(1)
+
+    # Skip if not on a protected branch
     if not is_protected_branch(config):
-        print("::notice::Not on protected branch – skipping checks")
+        logging.info(
+            f"Branch '{current_branch}' not in protected list {protected_branches} – skipping checks"
+        )
         return
 
-    # Paths from config (with defaults)
+    logging.info(f"Running checks on protected branch '{current_branch}'")
+
+    # Paths (with defaults)
     nyx_file = Path(config.get("nyx_version_file", "nyx-state.json"))
     pom_file = Path(config.get("pom_file", "pom.xml"))
     lb_dir = Path(config.get("liquibase_dir", "src/main/resources/db/changelog"))
 
-    # Enable flags (default: True)
+    # Enabled flags (default: True)
     check_maven = config.get("check_maven", True)
     check_liquibase = config.get("check_liquibase", True)
 
-    # Get canonical version from Nyx
-    nyx_version = load_nyx_version(nyx_file)
+    # Validate types
+    if not isinstance(check_maven, bool) or not isinstance(check_liquibase, bool):
+        logging.error(
+            f"check_maven and check_liquibase must be booleans; got check_maven={check_maven} and check_liquibase={check_liquibase} instead.")
+        sys.exit(1)
 
-    # Validate Maven version
+    # Get Nyx version (required for both checks)
+    nyx_version = load_nyx_version(nyx_file)
+    logging.info(f"Next version detected by Nyx: {nyx_version}")
+
+    # Validate Maven
     if check_maven:
         pom_version = get_pom_version(pom_file)
         if pom_version != nyx_version:
-            print(
-                f"::error::Maven version ({pom_version}) ≠ Nyx version ({nyx_version})",
-                file=sys.stderr
+            logging.error(
+                f"""
+                Maven version ({pom_version}) ≠ Nyx version ({nyx_version}).
+                Refusing to commit on protected branch unless versions match.
+                You can disable this check by setting check_maven=false in .pre-commit-maven-nyx.json.
+                """
             )
             sys.exit(1)
+        logging.info("✅ Maven version matches Nyx")
 
-    # Validate Liquibase files
+    # Validate Liquibase
     if check_liquibase:
         validate_liquibase_files(nyx_version, lb_dir)
+        logging.info("✅ Liquibase files present")
 
-    print("::notice::✅ Version and Liquibase checks passed")
+    logging.info("All checks passed!")
 
 
 if __name__ == "__main__":
