@@ -7,7 +7,6 @@
     - Required Liquibase files (<version>.sql and <version>_rollback.sql) exist
   entry: check-version-sync
   language: python
-  types: [file]  # doesn't actually process files, but needed for framework
   pass_filenames: false
   require_serial: true
   always_run: true

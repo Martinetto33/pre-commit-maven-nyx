@@ -1,24 +1,50 @@
-# pyproject.toml
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "pre-commit-maven-nyx"
 version = "1.2.2"
 description = "Pre-commit hook to validate Maven version against Nyx and Liquibase files"
-license = { text = "MIT" }
+readme = "README.md"
 requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [
+  { name = "Alin Bordeianu", email = "abordeianu@onit.it" }
+]
+keywords = ["pre-commit", "maven", "nyx", "liquibase", "version", "hook"]
 classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent"
 ]
 
-# Including a script for CLI usage
+[project.urls]
+"Homepage" = "https://github.com/Martinetto33/pre-commit-maven-nyx"
+"Source" = "https://github.com/Martinetto33/pre-commit-maven-nyx"
+"Tracker" = "https://github.com/Martinetto33/pre-commit-maven-nyx/issues"
+
+# Console script entry point that pre-commit will run
 [project.scripts]
 check-version-sync = "pre_commit_maven_nyx.maven_nyx_check:main"
 
-# This makes the package installable
+# Optional development dependencies (install with pip install .[dev])
+[project.optional-dependencies]
+dev = [
+  "pytest>=7.0",
+  "pre-commit>=3.0",
+  "pytest-cov"
+]
+
 [tool.setuptools.packages.find]
+# Assumes your package directory is named `pre_commit_maven_nyx` at repo root
 where = ["."]
+include = ["pre_commit_maven_nyx*"]
+
+# If you want to ensure certain non-Python files end up in sdist/wheel, add package-data here.
+# Example: include README or sample configuration inside the package (adjust as needed)
+[tool.setuptools.package-data]
+"pre_commit_maven_nyx" = ["py.typed", "*.yaml", "*.json", "templates/*"]
