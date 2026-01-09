@@ -1,0 +1,20 @@
+# pyproject.toml
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pre-commit-maven-nyx"
+version = "1.0.0"
+description = "Pre-commit hook to validate Maven version against Nyx and Liquibase files"
+license = { text = "MIT" }
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+# Including a script for CLI usage
+[project.scripts]
+check-version-sync = "check_version_sync:main"

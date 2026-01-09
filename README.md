@@ -59,7 +59,7 @@ If you don't create such file, a default configuration will be used by the hook.
 In your project, you will need to create a `.pre-commit-config.yaml` file with the following contents:
 
 ```yaml
-
+---
 # .pre-commit-config.yaml (in your main Maven project)
 repos:
   - repo: https://github.com/Martinetto33/pre-commit-maven-nyx
@@ -77,5 +77,37 @@ Once you've completed previous steps, run
 pre-commit install
 
 ```
+In case the above command fails, you might want to check the [troubleshooting](#Troubleshooting) section.
 
-And then the hook will run automatically each time you commit with git!
+To run everything, you'll use:
+```bash
+pre-commit run --all-files
+```
+
+## <a name="Troubleshooting"></a> Troubleshooting
+
+`pre-commit install` might fail if you have your core.hooksPath set with this message:
+
+```bash
+[ERROR] Cowardly refusing to install hooks with `core.hooksPath` set.
+hint: `git config --unset-all core.hooksPath`
+```
+
+You can work around this by running (this assumes a Windows environment and PowerShell):
+
+```powershell
+# Storing old hooksPaths
+$OldLocalHooksPath = git config core.hooksPath
+$OldGlobalHooksPath = git config --global core.hooksPath
+
+# Unsetting local and global hooksPath
+git config --unset-all core.hooksPath
+git config --global --unset-all core.hooksPath
+
+# Installing hook
+pre-commit install
+
+# Restoring old hooksPath
+git config core.hooksPath $OldLocalHooksPath
+git config --global core.hooksPath $OldGlobalHooksPath
+```
