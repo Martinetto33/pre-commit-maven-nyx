@@ -3,6 +3,97 @@ A pre-commit githook that checks if the pom.xml version matches with the Nyx com
 
 ## Prerequisites
 
+### Semantic versioning and release
+
+This guide assumes you want to use semantic versioning and release, and therefore that you are familiar with such concepts and with conventional commits.
+
+### Nyx
+
+Install Nyx: https://github.com/mooltiverse/nyx/releases/latest. It's a tool for semantic versioning and release.
+You can use it from the CLI once you add the executable to your PATH.
+
+This guide refers to **Nyx version [3.1.7](https://github.com/mooltiverse/nyx/releases/tag/3.1.7)**.
+
+You will need to configure Nyx to generate a state file. Below is an example
+configuration that is able to infer the new version, generate a changelog and
+save the state file in the root of your project, named `nyx-state.json`.
+
+#### Configuration for Nyx
+
+In a `.nyx` folder that you can track for version control, create a `changelog.hbs` template file, which will be used in the creation of the templates.
+Put the following content in the file, after replacing LINK-TO-YOUR-REPO with the link to your `git` repository:
+
+```handlebars
+{{!-- Template file for changelog generation --}}
+# [__VERSION__] - Changelog <span style="color: darkgray; font-size: medium; font-style: italic">(__DATE__)</span>
+{{#releases}}
+{{#sections}}
+## {{name}}
+{{#commits}}
+* [[{{#short5}}{{sha}}{{/short5}}]](https://LINK-TO-YOUR-REPO/commit/{{sha}}) {{message.fullMessage}} <span style="color: #11daf5">({{authorAction.identity.name}})</span>
+{{/commits}}
+{{/sections}}
+{{/releases}}
+```
+
+Then, *in the root of your project*, create a `.nyx.yaml` configuration file with the following content:
+
+```yaml
+---
+preset: simple
+
+changelog:
+  path: "CHANGELOG.md"
+  template: ".nyx/changelog.hbs"
+  # Feel free to add more sections to the changelog, as long
+  # as they have matching conventional commits associated.
+  # For example, a "Style changes": "^style$" rule can be
+  # added to document UI changes.
+  sections:
+    "Added": "^feat$"
+    "Fixed": "^fix$"
+    "Build changes": "^build$"
+    "CI changes": "^ci$"
+
+stateFile: "nyx-state.json" # needed to store the version number somewhere
+
+substitutions:
+  enabled:
+    - versionToken
+    - dateToken
+  items:
+    versionToken:
+      files: "CHANGELOG.md"
+      match: "__VERSION__" # this token was decided arbitrarily; it avoids weird metadata in the version name
+      replace: "{{versionMajorNumber}}.{{versionMinorNumber}}.{{versionPatchNumber}}"
+    dateToken:
+      files: "CHANGELOG.md"
+      match: "__DATE__" # used to display the date of the package release
+      replace: "{{#timestampISO8601}}{{timestamp}}{{/timestampISO8601}}"
+```
+#### Testing the configuration
+
+To see the computed version, run
+
+```bash
+nyx --preset=simple --summary infer
+```
+The `current version` entry will show the computed version.
+
+To run the changelog generation and the state file creation, which will be needed by _this_ hook, run:
+
+```bash
+nyx --c=.nyx.yaml make
+```
+
+#### More info in the official Nyx documentation
+
+Here's the Nyx user guide: https://mooltiverse.github.io/nyx/docs/user/quick-start/.
+
+Be warned that the guide is rather incomplete, as it doesn't provide a complete example of a working configuration.
+
+### Python
+
 You will need a Python installation. If you're working on Windows, you can use [scoop](https://scoop.sh/) to install it with
 
 ```bash
