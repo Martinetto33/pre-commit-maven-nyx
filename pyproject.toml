@@ -17,9 +17,8 @@ classifiers = [
 
 # Including a script for CLI usage
 [project.scripts]
-check-version-sync = "check_version_sync:main"
+check-version-sync = "pre_commit_maven_nyx.maven_nyx_check:main"
 
 # This makes the package installable
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["pre_commit_hooks*"]

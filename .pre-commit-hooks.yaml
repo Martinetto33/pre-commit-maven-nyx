@@ -5,7 +5,7 @@
     Validates that:
     - The version in pom.xml matches the version from Nyx (via JSON)
     - Required Liquibase files (<version>.sql and <version>_rollback.sql) exist
-  entry: python -m maven_nyx_check
+  entry: check-version-sync
   language: python
   types: [file]  # doesn't actually process files, but needed for framework
   pass_filenames: false
