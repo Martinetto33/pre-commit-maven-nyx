@@ -151,12 +151,15 @@ In your project, you will need to create a `.pre-commit-config.yaml` file with t
 
 ```yaml
 ---
-# .pre-commit-config.yaml (in your main Maven project)
-repos:
-  - repo: https://github.com/Martinetto33/pre-commit-maven-nyx
-    hooks:
-      - id: maven-nyx-version-sync
+  - repos:
+      # - repo: ...
 
+      # Martinetto33 pre-commit-maven-nyx
+      # (https://github.com/Martinetto33/pre-commit-maven-nyx)
+      - repo: https://github.com/Martinetto33/pre-commit-maven-nyx
+        rev: v1.1.0 # choose the latest version
+        hooks:
+          - id: maven-nyx-version-sync
 ```
 
 ### Installing the dependency in your project
@@ -177,7 +180,7 @@ pre-commit run --all-files
 
 ## <a name="Troubleshooting"></a> Troubleshooting
 
-`pre-commit install` might fail if you have your core.hooksPath set with this message:
+`pre-commit install` might fail if you have your `core.hooksPath` set with this message:
 
 ```bash
 [ERROR] Cowardly refusing to install hooks with `core.hooksPath` set.
