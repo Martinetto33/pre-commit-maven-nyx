@@ -162,7 +162,7 @@ repos:
   # Martinetto33 pre-commit-maven-nyx
   # (https://github.com/Martinetto33/pre-commit-maven-nyx)
   - repo: https://github.com/Martinetto33/pre-commit-maven-nyx
-    rev: v1.1.0 # choose the latest version
+    rev: v1.3.1 # choose the latest version
     hooks:
       - id: maven-nyx-version-sync
         stages: [pre-commit, pre-push]
