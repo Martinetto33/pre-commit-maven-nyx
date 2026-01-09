@@ -231,12 +231,12 @@ def main(argv: list[str] | None = None) -> int:
                 "You can disable this check by setting check_maven=false in .pre-commit-maven-nyx.json. "
             )
             sys.exit(1)
-        logging.info("✅ Maven version matches Nyx")
+        logging.info("Maven version matches Nyx")
 
     # Validate Liquibase
     if check_liquibase:
         validate_liquibase_files(nyx_version, lb_dir)
-        logging.info("✅ Liquibase files present")
+        logging.info("Liquibase files present")
 
     logging.info("All checks passed!")
     return 0
