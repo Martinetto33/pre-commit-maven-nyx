@@ -11,6 +11,7 @@ import sys
 import xml.etree.ElementTree as elementTree
 import logging
 from pathlib import Path
+import fnmatch
 
 
 class ColorFormatter(logging.Formatter):
@@ -100,10 +101,16 @@ def load_config(config_path: Path) -> dict:
         sys.exit(1)
 
 
+def matches_protected_branch(branch: str, patterns: list[str]) -> bool:
+    """Checks whether the given branch matches any of the given patterns (by also performing
+    * expansion and ? expansion as in fnmatch)."""
+    return any(fnmatch.fnmatchcase(branch, p) for p in patterns)
+
+
 def is_protected_branch(config: dict) -> bool:
     branch = get_current_branch()
     protected = config.get("protected_branches", ["master", "main"])
-    return branch in protected
+    return matches_protected_branch(branch, protected)
 
 
 def load_nyx_version(nyx_file: Path) -> str:
